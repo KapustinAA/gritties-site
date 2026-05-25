@@ -18,7 +18,7 @@
     body {
       background: radial-gradient(circle at center, #0a1f1a, #000000);
       overflow-x: hidden;
-      cursor: none; /* скрываем обычный курсор */
+      cursor: none;
     }
     
     .neon-green { text-shadow: 0 0 10px #10b981, 0 0 20px #10b981, 0 0 40px #10b981; }
@@ -55,7 +55,6 @@
       display: none;
     }
 
-    /* Кастомный курсор */
     #custom-cursor {
       position: fixed;
       width: 32px;
@@ -69,7 +68,6 @@
       display: none;
     }
 
-    /* Hover на арты */
     .collection-card {
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
@@ -78,23 +76,14 @@
       transform: scale(1.08);
       box-shadow: 0 0 40px #10b981;
     }
-    .collection-card img {
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .collection-card:hover img {
-      transform: scale(1.12);
-    }
   </style>
 </head>
 <body class="bg-black text-white overflow-x-hidden">
 
-  <!-- Particles -->
   <canvas id="particles" class="fixed inset-0 pointer-events-none z-[-1]"></canvas>
-
-  <!-- Кастомный курсор -->
   <div id="custom-cursor"></div>
 
-  <!-- Flying Logos (3 штуки) -->
+  <!-- Flying Logos -->
   <img id="flying-logo" src="ritual-logo.png" alt="" class="absolute w-28 h-28 md:w-36 md:h-36 pointer-events-none z-10">
   <img id="flying-logo2" src="ritual-logo.png" alt="" class="absolute w-20 h-20 md:w-28 md:h-28 pointer-events-none z-10">
   <img id="flying-logo3" src="ritual-logo.png" alt="" class="absolute w-16 h-16 md:w-24 md:h-24 pointer-events-none z-10">
@@ -109,7 +98,6 @@
 
       <div class="flex-1 flex justify-center items-center gap-8">
         <h1 onclick="scrollToTop()" class="text-3xl font-bold neon-green cursor-pointer hover:text-emerald-400 transition">GRITTIES</h1>
-        
         <div onclick="handleProfileClick()" class="cursor-pointer">
           <img src="profile-icon.png" alt="Profile" class="profile-icon w-12 h-12">
         </div>
@@ -151,7 +139,6 @@
     <div class="text-center px-6 z-20">
       <h1 id="main-title" class="text-7xl md:text-8xl font-bold neon-green tracking-tighter mb-4">GRITTIES</h1>
       <p id="subtitle" class="minecraft-font text-2xl md:text-3xl text-emerald-300 mb-12">Cult community on RITUAL</p>
-      
       <button onclick="connectWallet()" id="join-button" class="glow-button px-12 py-5 text-2xl font-medium bg-emerald-600 hover:bg-emerald-500 rounded-3xl border border-emerald-400/30">
         Join the Cult
       </button>
@@ -203,7 +190,7 @@
       <div class="flex justify-center gap-16 text-6xl">
         <a href="https://x.com/na2raaaa" target="_blank" class="hover:scale-110 transition-transform">𝕏</a>
         <a href="https://discord.com/invite/ritual-net" target="_blank" class="hover:scale-110 transition-transform">
-          <img src="discord-logo.webp.png" alt="Discord" class="w-14 h-14">
+          <img src="discord-logo.webp" alt="Discord" class="w-14 h-14">
         </a>
       </div>
     </div>
@@ -224,7 +211,7 @@
     gsap.from("#main-title", { y: 120, opacity: 0, duration: 1.8, ease: "power4.out" });
     gsap.from("#subtitle", { y: 80, opacity: 0, duration: 1.6, delay: 0.4, ease: "power4.out" });
 
-    // 3 Flying Logos
+    // Flying logos
     const logo1 = document.getElementById('flying-logo');
     function animateLogo1() { gsap.fromTo(logo1, {x:-300,y:Math.random()*window.innerHeight,rotation:0},{x:window.innerWidth+300,y:Math.random()*window.innerHeight+(Math.random()*400-200),rotation:1440,duration:22,ease:"none",onComplete:animateLogo1}); }
     animateLogo1();
@@ -263,21 +250,52 @@
       customCursor.style.display = 'block';
     });
 
-    // Wallet + Profile
+    // ==================== ИСПРАВЛЕННЫЙ CONNECT WALLET ====================
     async function connectWallet() {
       const button = document.getElementById('join-button');
-      if (!window.ethereum) { alert("MetaMask не найден"); return false; }
+      
+      if (!window.ethereum) {
+        alert("MetaMask не установлен. Пожалуйста, установите расширение MetaMask.");
+        return false;
+      }
+
       try {
-        await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x7BD',chainName:'CratD2C Testnet',nativeCurrency:{name:'CRAT',symbol:'CRAT',decimals:18},rpcUrls:['http://rpc.ritualfoundation.org/'],blockExplorerUrls:['http://explorer.ritualfoundation.org/']}]});
-        await window.ethereum.request({method:'eth_requestAccounts'});
+        // Запрашиваем аккаунты
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        // Добавляем сеть CratD2C Testnet (HTTPS)
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0x7BD',
+            chainName: 'CratD2C Testnet',
+            nativeCurrency: { name: 'CRAT', symbol: 'CRAT', decimals: 18 },
+            rpcUrls: ['https://rpc-testnet-1.cratd2csmartchain.io/'],
+            blockExplorerUrls: ['https://explorer.cratd2csmartchain.io/']
+          }]
+        });
+
         button.innerHTML = '✅ Connected';
         button.style.backgroundColor = '#10b981';
+        console.log("✅ Wallet connected:", accounts[0]);
+        alert("Кошелёк успешно подключён!\nАдрес: " + accounts[0].slice(0,6) + "..." + accounts[0].slice(-4));
         return true;
-      } catch(e) { alert("Не удалось подключить кошелёк"); return false; }
+
+      } catch (error) {
+        console.error("Connect error:", error);
+        if (error.code === 4001) {
+          alert("Вы отменили подключение кошелька.");
+        } else {
+          alert("Не удалось подключить кошелёк.\nУбедитесь, что MetaMask открыт и разблокирован.");
+        }
+        return false;
+      }
     }
 
     function handleProfileClick() {
-      connectWallet().then(success => { if (success) document.getElementById('profile-dropdown').style.display = 'block'; });
+      connectWallet().then(success => {
+        if (success) document.getElementById('profile-dropdown').style.display = 'block';
+      });
     }
 
     function changeAvatar(e) {
@@ -299,4 +317,3 @@
     });
   </script>
 </body>
-</html>

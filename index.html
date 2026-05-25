@@ -154,16 +154,14 @@
       
       <!-- Верхняя панель -->
       <div class="bg-[#0a1f1a] border-b border-emerald-400 px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="moneta.png" class="w-10 h-10">
+          <span id="game-score-coin" class="minecraft-font text-4xl font-bold text-emerald-400">0</span>
+        </div>
         <div class="text-3xl font-bold text-emerald-400" id="game-timer">30</div>
-        <div class="flex items-center gap-8">
-          <div class="flex items-center gap-2">
-            <img src="moneta.png" class="w-10 h-10">
-            <span id="game-score-coin" class="minecraft-font text-4xl font-bold text-emerald-400">0</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <img src="pers.png" class="w-10 h-10">
-            <span id="game-score-character" class="minecraft-font text-4xl font-bold text-purple-400">0</span>
-          </div>
+        <div class="flex items-center gap-3">
+          <img src="pers.png" class="w-10 h-10">
+          <span id="game-score-character" class="minecraft-font text-4xl font-bold text-purple-400">0</span>
         </div>
       </div>
 
@@ -307,7 +305,7 @@
         document.getElementById('game-timer').textContent = gameTime;
         if (gameTime <= 0) {
           clearInterval(gameInterval);
-          closeGame();
+          showGameResult();
           return;
         }
       }, 1000);
@@ -320,9 +318,9 @@
           x: Math.random() * gameCanvas.width,
           y: -80,
           size: rand < 0.65 ? 48 : rand < 0.92 ? 52 : 58,
-          speed: 0.8 + Math.random() * 0.8,           // в 3 раза медленнее
+          speed: 0.8 + Math.random() * 0.8,           // очень медленно
           rotation: 0,
-          rotationSpeed: (Math.random() - 0.5) * 0.06, // очень медленно
+          rotationSpeed: (Math.random() - 0.5) * 0.06,
           type: rand < 0.65 ? 'coin' : rand < 0.92 ? 'bomb' : 'character'
         });
       }, 110);
@@ -353,8 +351,12 @@
       }
       gameLoop();
 
-      // Клик
-      gameCanvas.addEventListener('click', (e) => {
+      // Зажатие ЛКМ + движение = сбор
+      let isMouseDown = false;
+      gameCanvas.addEventListener('mousedown', () => isMouseDown = true);
+      gameCanvas.addEventListener('mouseup', () => isMouseDown = false);
+      gameCanvas.addEventListener('mousemove', (e) => {
+        if (!isMouseDown) return;
         const rect = gameCanvas.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const clickY = e.clientY - rect.top;
@@ -370,10 +372,15 @@
             }
             document.getElementById('game-score').textContent = gameScore;
             gameObjects.splice(i, 1);
-            break;
           }
         }
       });
+    }
+
+    function showGameResult() {
+      const message = `Игра окончена!\n\nМонет: ${gameScore}\nПерсонажей: ${characterCount}`;
+      alert(message);
+      closeGame();
     }
   </script>
 </body>

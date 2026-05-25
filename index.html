@@ -80,10 +80,11 @@
 </head>
 <body class="bg-black text-white overflow-x-hidden">
 
+  <!-- Particles -->
   <canvas id="particles" class="fixed inset-0 pointer-events-none z-[-1]"></canvas>
   <div id="custom-cursor"></div>
 
-  <!-- Flying Logos -->
+  <!-- Flying Logos (3 шт) -->
   <img id="flying-logo" src="ritual-logo.png" alt="" class="absolute w-28 h-28 md:w-36 md:h-36 pointer-events-none z-10">
   <img id="flying-logo2" src="ritual-logo.png" alt="" class="absolute w-20 h-20 md:w-28 md:h-28 pointer-events-none z-10">
   <img id="flying-logo3" src="ritual-logo.png" alt="" class="absolute w-16 h-16 md:w-24 md:h-24 pointer-events-none z-10">
@@ -98,6 +99,7 @@
 
       <div class="flex-1 flex justify-center items-center gap-8">
         <h1 onclick="scrollToTop()" class="text-3xl font-bold neon-green cursor-pointer hover:text-emerald-400 transition">GRITTIES</h1>
+        
         <div onclick="handleProfileClick()" class="cursor-pointer">
           <img src="profile-icon.png" alt="Profile" class="profile-icon w-12 h-12">
         </div>
@@ -118,8 +120,9 @@
         <input type="file" id="avatar-upload" accept="image/*" class="hidden" onchange="changeAvatar(event)">
       </label>
 
-      <input type="text" id="nickname-input" value="YourNickname" class="minecraft-font bg-zinc-900 text-center text-2xl border border-emerald-400 rounded-xl py-3 w-full focus:outline-none">
-
+      <input type="text" id="nickname-input" value="YourNickname" 
+             class="minecraft-font bg-zinc-900 text-center text-2xl border border-emerald-400 rounded-xl py-3 w-full focus:outline-none">
+      
       <div class="mt-8">
         <p class="neon-text minecraft-font text-emerald-400 text-2xl cursor-pointer hover:text-emerald-300 mb-6">CHESTS</p>
         <div class="flex items-center justify-center gap-4">
@@ -127,10 +130,6 @@
           <span id="coin-balance" class="minecraft-font text-4xl font-bold text-emerald-400">0</span>
         </div>
       </div>
-
-      <button onclick="logout()" class="mt-10 w-full minecraft-font text-red-500 text-xl py-3 border border-red-500 rounded-2xl hover:bg-red-500 hover:text-black transition">
-        LOGOUT
-      </button>
     </div>
   </div>
 
@@ -139,7 +138,9 @@
     <div class="text-center px-6 z-20">
       <h1 id="main-title" class="text-7xl md:text-8xl font-bold neon-green tracking-tighter mb-4">GRITTIES</h1>
       <p id="subtitle" class="minecraft-font text-2xl md:text-3xl text-emerald-300 mb-12">Cult community on RITUAL</p>
-      <button onclick="connectWallet()" id="join-button" class="glow-button px-12 py-5 text-2xl font-medium bg-emerald-600 hover:bg-emerald-500 rounded-3xl border border-emerald-400/30">
+      
+      <button onclick="connectWallet()" id="join-button" 
+              class="glow-button px-12 py-5 text-2xl font-medium bg-emerald-600 hover:bg-emerald-500 rounded-3xl border border-emerald-400/30">
         Join the Cult
       </button>
     </div>
@@ -190,7 +191,7 @@
       <div class="flex justify-center gap-16 text-6xl">
         <a href="https://x.com/na2raaaa" target="_blank" class="hover:scale-110 transition-transform">𝕏</a>
         <a href="https://discord.com/invite/ritual-net" target="_blank" class="hover:scale-110 transition-transform">
-          <img src="discord-logo.webp" alt="Discord" class="w-14 h-14">
+          <img src="discord-logo.webp.png" alt="Discord" class="w-14 h-14">
         </a>
       </div>
     </div>
@@ -250,20 +251,18 @@
       customCursor.style.display = 'block';
     });
 
-    // ==================== ИСПРАВЛЕННЫЙ CONNECT WALLET ====================
+    // ==================== CONNECT WALLET + MINI GAME ====================
     async function connectWallet() {
       const button = document.getElementById('join-button');
       
       if (!window.ethereum) {
-        alert("MetaMask не установлен. Пожалуйста, установите расширение MetaMask.");
+        alert("MetaMask не установлен.");
         return false;
       }
 
       try {
-        // Запрашиваем аккаунты
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-        // Добавляем сеть CratD2C Testnet (HTTPS)
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
           params: [{
@@ -275,45 +274,51 @@
           }]
         });
 
-        button.innerHTML = '✅ Connected';
+        // Меняем кнопку на MINI GAME
+        button.textContent = 'MINI GAME';
         button.style.backgroundColor = '#10b981';
-        console.log("✅ Wallet connected:", accounts[0]);
-        alert("Кошелёк успешно подключён!\nАдрес: " + accounts[0].slice(0,6) + "..." + accounts[0].slice(-4));
-        return true;
+        button.onclick = () => alert("Мини-игра скоро будет готова! 🎮");
 
-      } catch (error) {
-        console.error("Connect error:", error);
-        if (error.code === 4001) {
-          alert("Вы отменили подключение кошелька.");
-        } else {
-          alert("Не удалось подключить кошелёк.\nУбедитесь, что MetaMask открыт и разблокирован.");
-        }
+        return true;
+      } catch (e) {
+        alert("Не удалось подключить кошелёк.");
         return false;
       }
     }
 
     function handleProfileClick() {
       connectWallet().then(success => {
-        if (success) document.getElementById('profile-dropdown').style.display = 'block';
+        if (success) {
+          document.getElementById('profile-dropdown').style.display = 'block';
+        }
       });
     }
 
+    // Сохранение аватарки и никнейма
     function changeAvatar(e) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = ev => document.getElementById('profile-avatar').src = ev.target.result;
+        reader.onload = ev => {
+          document.getElementById('profile-avatar').src = ev.target.result;
+          localStorage.setItem('gritties_avatar', ev.target.result);
+        };
         reader.readAsDataURL(file);
       }
     }
 
-    function logout() {
-      if (confirm("Выйти из аккаунта?")) document.getElementById('profile-dropdown').style.display = 'none';
+    function loadProfileData() {
+      const savedAvatar = localStorage.getItem('gritties_avatar');
+      const savedNickname = localStorage.getItem('gritties_nickname');
+      if (savedAvatar) document.getElementById('profile-avatar').src = savedAvatar;
+      if (savedNickname) document.getElementById('nickname-input').value = savedNickname;
     }
 
-    document.addEventListener('click', e => {
-      const dropdown = document.getElementById('profile-dropdown');
-      if (!dropdown.contains(e.target) && !e.target.closest('.profile-icon')) dropdown.style.display = 'none';
+    document.getElementById('nickname-input').addEventListener('input', () => {
+      localStorage.setItem('gritties_nickname', document.getElementById('nickname-input').value);
     });
+
+    loadProfileData();
   </script>
 </body>
+</html>

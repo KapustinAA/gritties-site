@@ -10,72 +10,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
   <style>
-    @font-face {
-      font-family: 'Minecraft';
-      src: url('MinecraftRusRegular.ttf') format('truetype');
-    }
-
-    body {
-      background: radial-gradient(circle at center, #0a1f1a, #000000);
-      overflow-x: hidden;
-      cursor: none;
-    }
-    
+    @font-face { font-family: 'Minecraft'; src: url('MinecraftRusRegular.ttf') format('truetype'); }
+    body { background: radial-gradient(circle at center, #0a1f1a, #000000); overflow-x: hidden; cursor: none; }
     .neon-green { text-shadow: 0 0 10px #10b981, 0 0 20px #10b981, 0 0 40px #10b981; }
-
-    .nav-button {
-      transition: all 0.4s ease;
-      border: 2px solid rgba(16, 185, 129, 0.3);
-    }
+    .nav-button { transition: all 0.4s ease; border: 2px solid rgba(16, 185, 129, 0.3); }
     .nav-button:hover { border-color: #10b981; box-shadow: 0 0 20px #10b981; color: #10b981; }
-
     .glow-button:hover { box-shadow: 0 0 30px #10b981; transform: scale(1.05); }
-
     .minecraft-font { font-family: 'Minecraft', system-ui; }
-
-    .profile-icon {
-      transition: all 0.3s ease;
-      border: 3px solid #10b981;
-      border-radius: 50%;
-      padding: 4px;
-      box-shadow: 0 0 25px #10b981;
-    }
-
-    .profile-dropdown {
-      position: fixed;
-      top: 90px;
-      right: 50px;
-      background: #0a1f1a;
-      border: 3px solid #10b981;
-      border-radius: 16px;
-      padding: 24px;
-      width: 340px;
-      box-shadow: 0 0 40px #10b981;
-      z-index: 1000;
-      display: none;
-    }
-
-    #custom-cursor {
-      position: fixed;
-      width: 32px;
-      height: 32px;
-      border: 2px solid #10b981;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 99999;
-      box-shadow: 0 0 25px #10b981;
-      mix-blend-mode: difference;
-      display: none;
-    }
-
-    .collection-card {
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: hidden;
-    }
-    .collection-card:hover {
-      transform: scale(1.08);
-      box-shadow: 0 0 40px #10b981;
-    }
+    .profile-icon { transition: all 0.3s ease; border: 3px solid #10b981; border-radius: 50%; padding: 4px; box-shadow: 0 0 25px #10b981; }
+    .profile-dropdown { position: fixed; top: 90px; right: 50px; background: #0a1f1a; border: 3px solid #10b981; border-radius: 16px; padding: 24px; width: 340px; box-shadow: 0 0 40px #10b981; z-index: 1000; display: none; }
+    #custom-cursor { position: fixed; width: 32px; height: 32px; border: 2px solid #10b981; border-radius: 50%; pointer-events: none; z-index: 99999; box-shadow: 0 0 25px #10b981; mix-blend-mode: difference; display: none; }
+    .collection-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
+    .collection-card:hover { transform: scale(1.08); box-shadow: 0 0 40px #10b981; }
   </style>
 </head>
 <body class="bg-black text-white overflow-x-hidden">
@@ -208,7 +154,6 @@
       
       <div class="p-6 h-full flex flex-col">
         <div class="flex justify-between items-center mb-4">
-          <div></div> <!-- пустое место слева -->
           <div class="text-3xl font-bold text-emerald-400" id="game-timer">30</div>
           <div class="flex items-center gap-3">
             <img src="moneta.png" class="w-12 h-12">
@@ -319,7 +264,7 @@
 
     // Мини-игра
     function openMiniGame() {
-      if (!isWalletConnected) return alert("Сначала подключите кошелёк");
+      if (!isWalletConnected) return;
       document.getElementById('game-modal').classList.remove('hidden');
     }
 
@@ -354,12 +299,12 @@
         document.getElementById('game-timer').textContent = gameTime;
         if (gameTime <= 0) {
           clearInterval(gameInterval);
-          alert(`Игра окончена! Вы заработали ${gameScore} монет`);
           closeGame();
+          return;
         }
       }, 1000);
 
-      // Генерация объектов
+      // Генерация объектов (медленнее)
       setInterval(() => {
         if (gameTime <= 0) return;
         const rand = Math.random();
@@ -367,12 +312,12 @@
           x: Math.random() * gameCanvas.width,
           y: -80,
           size: rand < 0.65 ? 48 : rand < 0.92 ? 52 : 58,
-          speed: 2.2 + Math.random() * 2.2,   // медленнее
+          speed: 1.8 + Math.random() * 1.8,        // медленнее
           rotation: 0,
-          rotationSpeed: (Math.random() - 0.5) * 0.12,  // медленнее
+          rotationSpeed: (Math.random() - 0.5) * 0.08, // медленнее
           type: rand < 0.65 ? 'coin' : rand < 0.92 ? 'bomb' : 'character'
         });
-      }, 85);
+      }, 90);
 
       function gameLoop() {
         ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRITTIES</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <style>
+    @font-face {
+      font-family: 'Minecraft';
+      src: url('MinecraftRusRegular.ttf') format('truetype');
+    }
+
+    body {
+      background: radial-gradient(circle at center, #0a1f1a, #000000);
+      overflow-x: hidden;
+      cursor: none; /* скрываем обычный курсор */
+    }
+    
+    .neon-green { text-shadow: 0 0 10px #10b981, 0 0 20px #10b981, 0 0 40px #10b981; }
+
+    .nav-button {
+      transition: all 0.4s ease;
+      border: 2px solid rgba(16, 185, 129, 0.3);
+    }
+    .nav-button:hover { border-color: #10b981; box-shadow: 0 0 20px #10b981; color: #10b981; }
+
+    .glow-button:hover { box-shadow: 0 0 30px #10b981; transform: scale(1.05); }
+
+    .minecraft-font { font-family: 'Minecraft', system-ui; }
+
+    .profile-icon {
+      transition: all 0.3s ease;
+      border: 3px solid #10b981;
+      border-radius: 50%;
+      padding: 4px;
+      box-shadow: 0 0 25px #10b981;
+    }
+
+    .profile-dropdown {
+      position: fixed;
+      top: 90px;
+      right: 50px;
+      background: #0a1f1a;
+      border: 3px solid #10b981;
+      border-radius: 16px;
+      padding: 24px;
+      width: 340px;
+      box-shadow: 0 0 40px #10b981;
+      z-index: 1000;
+      display: none;
+    }
+
+    /* Кастомный курсор */
+    #custom-cursor {
+      position: fixed;
+      width: 32px;
+      height: 32px;
+      border: 2px solid #10b981;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99999;
+      box-shadow: 0 0 25px #10b981;
+      mix-blend-mode: difference;
+      display: none;
+    }
+
+    /* Hover на арты */
+    .collection-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+    .collection-card:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 40px #10b981;
+    }
+    .collection-card img {
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .collection-card:hover img {
+      transform: scale(1.12);
+    }
+  </style>
+</head>
+<body class="bg-black text-white overflow-x-hidden">
+
+  <!-- Particles -->
+  <canvas id="particles" class="fixed inset-0 pointer-events-none z-[-1]"></canvas>
+
+  <!-- Кастомный курсор -->
+  <div id="custom-cursor"></div>
+
+  <!-- Flying Logos (3 штуки) -->
+  <img id="flying-logo" src="ritual-logo.png" alt="" class="absolute w-28 h-28 md:w-36 md:h-36 pointer-events-none z-10">
+  <img id="flying-logo2" src="ritual-logo.png" alt="" class="absolute w-20 h-20 md:w-28 md:h-28 pointer-events-none z-10">
+  <img id="flying-logo3" src="ritual-logo.png" alt="" class="absolute w-16 h-16 md:w-24 md:h-24 pointer-events-none z-10">
+
+  <!-- Шапка -->
+  <nav class="fixed top-0 w-full z-50 bg-black/70 backdrop-blur-lg border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center">
+      <div class="flex gap-4">
+        <a onclick="smoothScrollTo('why-gritties')" class="nav-button text-xl font-medium px-6 py-2 rounded-2xl cursor-pointer">WHY GRITTIES</a>
+        <a onclick="smoothScrollTo('mini-game')" class="nav-button text-xl font-medium px-6 py-2 rounded-2xl cursor-pointer">MINI GAME</a>
+      </div>
+
+      <div class="flex-1 flex justify-center items-center gap-8">
+        <h1 onclick="scrollToTop()" class="text-3xl font-bold neon-green cursor-pointer hover:text-emerald-400 transition">GRITTIES</h1>
+        
+        <div onclick="handleProfileClick()" class="cursor-pointer">
+          <img src="profile-icon.png" alt="Profile" class="profile-icon w-12 h-12">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <a onclick="smoothScrollTo('socials-section')" class="nav-button text-xl font-medium px-6 py-2 rounded-2xl cursor-pointer">SOCIALS</a>
+        <a onclick="smoothScrollTo('collections-section')" class="nav-button text-xl font-medium px-6 py-2 rounded-2xl cursor-pointer">COLLECTIONS</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Profile Dropdown -->
+  <div id="profile-dropdown" class="profile-dropdown">
+    <div class="text-center">
+      <label class="cursor-pointer block">
+        <img id="profile-avatar" src="profile-icon.png" alt="Avatar" class="w-28 h-28 mx-auto rounded-2xl border-4 border-emerald-400 mb-4 hover:brightness-110">
+        <input type="file" id="avatar-upload" accept="image/*" class="hidden" onchange="changeAvatar(event)">
+      </label>
+
+      <input type="text" id="nickname-input" value="YourNickname" class="minecraft-font bg-zinc-900 text-center text-2xl border border-emerald-400 rounded-xl py-3 w-full focus:outline-none">
+
+      <div class="mt-8">
+        <p class="neon-text minecraft-font text-emerald-400 text-2xl cursor-pointer hover:text-emerald-300 mb-6">CHESTS</p>
+        <div class="flex items-center justify-center gap-4">
+          <img src="coin.png" alt="Coin" class="w-14 h-14">
+          <span id="coin-balance" class="minecraft-font text-4xl font-bold text-emerald-400">0</span>
+        </div>
+      </div>
+
+      <button onclick="logout()" class="mt-10 w-full minecraft-font text-red-500 text-xl py-3 border border-red-500 rounded-2xl hover:bg-red-500 hover:text-black transition">
+        LOGOUT
+      </button>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <section class="min-h-screen flex items-center justify-center relative pt-20">
+    <div class="text-center px-6 z-20">
+      <h1 id="main-title" class="text-7xl md:text-8xl font-bold neon-green tracking-tighter mb-4">GRITTIES</h1>
+      <p id="subtitle" class="minecraft-font text-2xl md:text-3xl text-emerald-300 mb-12">Cult community on RITUAL</p>
+      
+      <button onclick="connectWallet()" id="join-button" class="glow-button px-12 py-5 text-2xl font-medium bg-emerald-600 hover:bg-emerald-500 rounded-3xl border border-emerald-400/30">
+        Join the Cult
+      </button>
+    </div>
+  </section>
+
+  <!-- Why GRITTIES -->
+  <section id="why-gritties" class="py-24 bg-black/50">
+    <div class="max-w-7xl mx-auto px-6">
+      <h2 class="text-5xl font-bold text-center neon-green mb-16">WHY GRITTIES?</h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <a href="https://x.com/ritualnet" target="_blank" class="block">
+          <div class="card bg-zinc-900/70 border border-emerald-500/20 rounded-3xl p-8 text-center">
+            <h3 class="minecraft-font text-2xl font-bold mb-4 text-emerald-400">Ritual</h3>
+            <p class="text-zinc-400">Community building the future together with RITUAL</p>
+          </div>
+        </a>
+        <div onclick="smoothScrollTo('collections-section')" class="card bg-zinc-900/70 border border-emerald-500/20 rounded-3xl p-8 text-center cursor-pointer">
+          <h3 class="minecraft-font text-2xl font-bold mb-4 text-emerald-400">Collections</h3>
+          <p class="text-zinc-400">Unique NFTs and digital artifacts</p>
+        </div>
+        <div class="card bg-zinc-900/70 border border-emerald-500/20 rounded-3xl p-8 text-center">
+          <h3 class="minecraft-font text-2xl font-bold mb-4 text-emerald-400">Mini Games</h3>
+          <p class="text-zinc-400">Play, earn, and become part of the cult</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Collection of important people -->
+  <section id="collections-section" class="py-24">
+    <div class="max-w-7xl mx-auto px-6">
+      <h2 class="text-5xl font-bold text-center neon-green mb-16">Collection of important people</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <a href="https://x.com/na2raaaa" target="_blank"><div class="collection-card bg-zinc-900 rounded-3xl overflow-hidden aspect-square"><img src="art1.png" class="w-full h-full object-cover"></div></a>
+        <a href="https://x.com/meison_mswen" target="_blank"><div class="collection-card bg-zinc-900 rounded-3xl overflow-hidden aspect-square"><img src="art2.png" class="w-full h-full object-cover"></div></a>
+        <a href="https://x.com/LolaSt1400" target="_blank"><div class="collection-card bg-zinc-900 rounded-3xl overflow-hidden aspect-square"><img src="art3.png" class="w-full h-full object-cover"></div></a>
+        <a href="https://x.com/joshsimenhoff" target="_blank"><div class="collection-card bg-zinc-900 rounded-3xl overflow-hidden aspect-square"><img src="art4.png" class="w-full h-full object-cover"></div></a>
+        <a href="https://x.com/Jez_Cryptoz" target="_blank"><div class="collection-card bg-zinc-900 rounded-3xl overflow-hidden aspect-square"><img src="art5.png" class="w-full h-full object-cover"></div></a>
+        <a href="https://x.com/dunken9718" target="_blank"><div class="collection-card bg-zinc-900 rounded-3xl overflow-hidden aspect-square"><img src="art6.png" class="w-full h-full object-cover"></div></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Socials -->
+  <section id="socials-section" class="py-24 bg-black/80 border-t border-emerald-500/20">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+      <h2 class="text-5xl font-bold neon-green mb-12">SOCIALS</h2>
+      <div class="flex justify-center gap-16 text-6xl">
+        <a href="https://x.com/na2raaaa" target="_blank" class="hover:scale-110 transition-transform">𝕏</a>
+        <a href="https://discord.com/invite/ritual-net" target="_blank" class="hover:scale-110 transition-transform">
+          <img src="discord-logo.webp.png" alt="Discord" class="w-14 h-14">
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/10 py-8 bg-black">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-sm text-zinc-400">
+      <div>© 2026 GRITTIES. All rights reserved.</div>
+      <div class="flex items-center gap-2 mt-4 md:mt-0">MADE WITH <span class="text-emerald-400">💚</span> BY NA2RAAAA</div>
+    </div>
+  </footer>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Hero animation
+    gsap.from("#main-title", { y: 120, opacity: 0, duration: 1.8, ease: "power4.out" });
+    gsap.from("#subtitle", { y: 80, opacity: 0, duration: 1.6, delay: 0.4, ease: "power4.out" });
+
+    // 3 Flying Logos
+    const logo1 = document.getElementById('flying-logo');
+    function animateLogo1() { gsap.fromTo(logo1, {x:-300,y:Math.random()*window.innerHeight,rotation:0},{x:window.innerWidth+300,y:Math.random()*window.innerHeight+(Math.random()*400-200),rotation:1440,duration:22,ease:"none",onComplete:animateLogo1}); }
+    animateLogo1();
+
+    const logo2 = document.getElementById('flying-logo2');
+    function animateLogo2() { gsap.fromTo(logo2, {x:window.innerWidth+300,y:Math.random()*window.innerHeight,rotation:0},{x:-300,y:Math.random()*window.innerHeight+(Math.random()*400-200),rotation:-1440,duration:14,ease:"none",onComplete:animateLogo2}); }
+    animateLogo2();
+
+    const logo3 = document.getElementById('flying-logo3');
+    function animateLogo3() { gsap.fromTo(logo3, {x:-250,y:Math.random()*window.innerHeight,rotation:0},{x:window.innerWidth+250,y:Math.random()*window.innerHeight+(Math.random()*300-150),rotation:2160,duration:8,ease:"none",onComplete:animateLogo3}); }
+    animateLogo3();
+
+    function smoothScrollTo(id) { document.getElementById(id).scrollIntoView({ behavior: "smooth" }); }
+    function scrollToTop() { window.scrollTo({ top: 0, behavior: "smooth" }); }
+
+    // Particles
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    class Particle {
+      constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 3 + 1; this.speedX = Math.random() * 0.5 - 0.25; this.speedY = Math.random() * 0.5 - 0.25; }
+      update() { this.x += this.speedX; this.y += this.speedY; if (this.x < 0 || this.x > canvas.width) this.speedX *= -1; if (this.y < 0 || this.y > canvas.height) this.speedY *= -1; }
+      draw() { ctx.fillStyle = 'rgba(16, 185, 129, 0.8)'; ctx.shadowBlur = 15; ctx.shadowColor = '#10b981'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+    }
+    function initParticles() { particles = []; for (let i = 0; i < 120; i++) particles.push(new Particle()); }
+    function animateParticles() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animateParticles); }
+    window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
+    resizeCanvas(); initParticles(); animateParticles();
+
+    // Custom Cursor
+    const customCursor = document.getElementById('custom-cursor');
+    document.addEventListener('mousemove', (e) => {
+      customCursor.style.left = (e.clientX - 16) + 'px';
+      customCursor.style.top = (e.clientY - 16) + 'px';
+      customCursor.style.display = 'block';
+    });
+
+    // Wallet + Profile
+    async function connectWallet() {
+      const button = document.getElementById('join-button');
+      if (!window.ethereum) { alert("MetaMask не найден"); return false; }
+      try {
+        await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x7BD',chainName:'CratD2C Testnet',nativeCurrency:{name:'CRAT',symbol:'CRAT',decimals:18},rpcUrls:['http://rpc.ritualfoundation.org/'],blockExplorerUrls:['http://explorer.ritualfoundation.org/']}]});
+        await window.ethereum.request({method:'eth_requestAccounts'});
+        button.innerHTML = '✅ Connected';
+        button.style.backgroundColor = '#10b981';
+        return true;
+      } catch(e) { alert("Не удалось подключить кошелёк"); return false; }
+    }
+
+    function handleProfileClick() {
+      connectWallet().then(success => { if (success) document.getElementById('profile-dropdown').style.display = 'block'; });
+    }
+
+    function changeAvatar(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = ev => document.getElementById('profile-avatar').src = ev.target.result;
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function logout() {
+      if (confirm("Выйти из аккаунта?")) document.getElementById('profile-dropdown').style.display = 'none';
+    }
+
+    document.addEventListener('click', e => {
+      const dropdown = document.getElementById('profile-dropdown');
+      if (!dropdown.contains(e.target) && !e.target.closest('.profile-icon')) dropdown.style.display = 'none';
+    });
+  </script>
+</body>
+</html>

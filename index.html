@@ -69,9 +69,15 @@
       <input type="text" id="nickname-input" value="YourNickname" class="minecraft-font bg-zinc-900 text-center text-2xl border border-emerald-400 rounded-xl py-3 w-full focus:outline-none">
       <div class="mt-8">
         <p class="neon-text minecraft-font text-emerald-400 text-2xl cursor-pointer hover:text-emerald-300 mb-6">CHESTS</p>
-        <div class="flex items-center justify-center gap-4">
-          <img src="moneta.png" alt="Coin" class="w-14 h-14">
-          <span id="coin-balance" class="minecraft-font text-4xl font-bold text-emerald-400">0</span>
+        <div class="flex items-center justify-center gap-6">
+          <div class="flex items-center gap-2">
+            <img src="moneta.png" class="w-14 h-14">
+            <span id="coin-balance" class="minecraft-font text-4xl font-bold text-emerald-400">0</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <img src="pers.png" class="w-14 h-14">
+            <span id="character-balance" class="minecraft-font text-4xl font-bold text-purple-400">0</span>
+          </div>
         </div>
       </div>
     </div>
@@ -297,7 +303,8 @@
       gameTime = 30;
       characterCount = 0;
       gameObjects = [];
-      document.getElementById('game-score').textContent = gameScore;
+      document.getElementById('game-score-coin').textContent = gameScore;
+      document.getElementById('game-score-character').textContent = characterCount;
       document.getElementById('game-timer').textContent = gameTime;
 
       gameInterval = setInterval(() => {
@@ -318,7 +325,7 @@
           x: Math.random() * gameCanvas.width,
           y: -80,
           size: rand < 0.65 ? 48 : rand < 0.92 ? 52 : 58,
-          speed: 0.8 + Math.random() * 0.8,           // очень медленно
+          speed: 0.8 + Math.random() * 0.8,
           rotation: 0,
           rotationSpeed: (Math.random() - 0.5) * 0.06,
           type: rand < 0.65 ? 'coin' : rand < 0.92 ? 'bomb' : 'character'
@@ -370,7 +377,8 @@
               gameScore += 50;
               characterCount++;
             }
-            document.getElementById('game-score').textContent = gameScore;
+            document.getElementById('game-score-coin').textContent = gameScore;
+            document.getElementById('game-score-character').textContent = characterCount;
             gameObjects.splice(i, 1);
           }
         }

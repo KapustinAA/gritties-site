@@ -88,12 +88,23 @@
     <div class="text-center px-6 z-20">
       <h1 id="main-title" class="text-7xl md:text-8xl font-bold neon-green tracking-tighter mb-4">GRITTIES</h1>
       <p id="subtitle" class="minecraft-font text-2xl md:text-3xl text-emerald-300 mb-12">Cult community on RITUAL</p>
-      <button onclick="connectWallet()" id="join-button" class="glow-button px-12 py-5 text-2xl font-medium bg-emerald-600 hover:bg-emerald-500 rounded-3xl border border-emerald-400/30 mb-4">
-        Join the Cult
-      </button>
-      <button onclick="openShop()" class="minecraft-font px-12 py-4 text-2xl font-medium bg-zinc-900 hover:bg-zinc-800 border-2 border-emerald-400 rounded-3xl text-emerald-400">
-        SHOP
-      </button>
+      
+      <!-- До подключения кошелька -->
+      <div id="pre-connect-hero" class="flex flex-col items-center gap-4">
+        <button onclick="connectWallet()" id="join-button" class="glow-button px-12 py-5 text-2xl font-medium bg-emerald-600 hover:bg-emerald-500 rounded-3xl border border-emerald-400/30">
+          Join the Cult
+        </button>
+      </div>
+
+      <!-- После подключения кошелька -->
+      <div id="post-connect-hero" class="hidden flex flex-col items-center gap-4">
+        <button onclick="openMiniGame()" class="glow-button px-12 py-5 text-2xl font-medium bg-emerald-600 hover:bg-emerald-500 rounded-3xl border border-emerald-400/30">
+          MINI GAME
+        </button>
+        <button onclick="openShop()" class="minecraft-font px-12 py-4 text-2xl font-medium bg-zinc-900 hover:bg-zinc-800 border-2 border-emerald-400 rounded-3xl text-emerald-400">
+          SHOP
+        </button>
+      </div>
     </div>
   </section>
 
@@ -175,17 +186,17 @@
       </div>
 
       <div class="flex-1 flex flex-col relative">
-        <!-- Экран PLAY -->
+        <!-- Экран PLAY (по центру рамки) -->
         <div id="play-screen" class="flex-1 flex items-center justify-center">
-          <button onclick="startGame()" class="px-20 py-10 text-6xl font-bold neon-green border-4 border-emerald-400 rounded-3xl hover:scale-105 transition">PLAY</button>
+          <button onclick="startGame()" class="px-20 py-10 text-6xl font-bold neon-green border-4 border-emerald-400 rounded-3xl hover:scale-105 transition mt-12">PLAY</button>
         </div>
 
         <!-- Canvas игры -->
         <canvas id="game-canvas" class="flex-1 bg-black hidden"></canvas>
 
-        <!-- Экран результата (CONGRATZ BRUH) -->
+        <!-- Экран результата -->
         <div id="game-result" class="hidden flex-1 flex flex-col items-center justify-center bg-black/70">
-          <h2 class="minecraft-font text-6xl neon-green mb-8">congratz bruh...</h2>
+          <h2 class="minecraft-font text-6xl neon-green mb-8">congratz bruh</h2>
           <div class="flex flex-col items-center gap-8">
             <div class="flex items-center gap-6">
               <img src="moneta.png" class="w-16 h-16">
@@ -280,9 +291,8 @@
           }]
         });
         isWalletConnected = true;
-        button.textContent = 'MINI GAME';
-        button.style.backgroundColor = '#10b981';
-        button.onclick = openMiniGame;
+        document.getElementById('pre-connect-hero').classList.add('hidden');
+        document.getElementById('post-connect-hero').classList.remove('hidden');
         return true;
       } catch (e) {
         alert("Не удалось подключить кошелёк");
@@ -357,7 +367,7 @@
         }
       }, 1000);
 
-      // Генерация объектов — ОДИНАКОВАЯ медленная скорость
+      // ФИКСИРОВАННАЯ ОЧЕНЬ МЕДЛЕННАЯ СКОРОСТЬ (одинаковая каждый раз)
       setInterval(() => {
         if (timeLeft <= 0) return;
         const rand = Math.random();
@@ -365,7 +375,7 @@
           x: Math.random() * gameCanvas.width,
           y: -80,
           size: rand < 0.65 ? 48 : rand < 0.92 ? 52 : 58,
-          speed: 1.2,                                 // фиксированная медленная скорость
+          speed: 0.65,                              // очень медленно и всегда одинаково
           rotation: 0,
           rotationSpeed: (Math.random() - 0.5) * 0.06,
           type: rand < 0.65 ? 'coin' : rand < 0.92 ? 'bomb' : 'character'
@@ -397,7 +407,7 @@
       }
       gameLoop();
 
-      // Зажатие ЛКМ + движение = сбор (увеличенный hitbox)
+      // Зажатие ЛКМ + движение = сбор (уменьшенный hitbox для точности)
       let isMouseDown = false;
       gameCanvas.addEventListener('mousedown', () => isMouseDown = true);
       gameCanvas.addEventListener('mouseup', () => isMouseDown = false);
@@ -409,7 +419,8 @@
 
         for (let i = gameObjects.length - 1; i >= 0; i--) {
           const obj = gameObjects[i];
-          if (Math.hypot(obj.x - clickX, obj.y - clickY) < obj.size * 1.3) {  // увеличенный hitbox
+          // УМЕНЬШЕННЫЙ hitbox — теперь точно собирает только то, на что наведён курсор
+          if (Math.hypot(obj.x - clickX, obj.y - clickY) < obj.size * 0.9) {
             if (obj.type === 'coin') gameScore += 1;
             else if (obj.type === 'bomb') gameScore = Math.max(0, gameScore - 20);
             else {
@@ -419,19 +430,18 @@
             document.getElementById('game-score-coin').textContent = gameScore;
             document.getElementById('game-score-character').textContent = characterCount;
             gameObjects.splice(i, 1);
+            break; // собираем только один объект за раз
           }
         }
       });
     }
 
     function endGame() {
-      // Сохраняем в профиль
       totalCoins += gameScore;
       totalCharacters += characterCount;
       document.getElementById('coin-balance').textContent = totalCoins;
       document.getElementById('character-balance').textContent = totalCharacters;
 
-      // Показываем результат
       document.getElementById('game-canvas').classList.add('hidden');
       const resultScreen = document.getElementById('game-result');
       resultScreen.classList.remove('hidden');

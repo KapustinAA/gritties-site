@@ -69,12 +69,12 @@
       <input type="text" id="nickname-input" value="YourNickname" class="minecraft-font bg-zinc-900 text-center text-2xl border border-emerald-400 rounded-xl py-3 w-full focus:outline-none">
       <div class="mt-8">
         <p class="neon-text minecraft-font text-emerald-400 text-2xl cursor-pointer hover:text-emerald-300 mb-6">CHESTS</p>
-        <div class="flex items-center justify-center gap-6">
-          <div class="flex items-center gap-2">
+        <div class="flex items-center justify-center gap-8">
+          <div class="flex items-center gap-3">
             <img src="moneta.png" class="w-14 h-14">
             <span id="coin-balance" class="minecraft-font text-4xl font-bold text-emerald-400">0</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             <img src="pers.png" class="w-14 h-14">
             <span id="character-balance" class="minecraft-font text-4xl font-bold text-purple-400">0</span>
           </div>
@@ -88,8 +88,11 @@
     <div class="text-center px-6 z-20">
       <h1 id="main-title" class="text-7xl md:text-8xl font-bold neon-green tracking-tighter mb-4">GRITTIES</h1>
       <p id="subtitle" class="minecraft-font text-2xl md:text-3xl text-emerald-300 mb-12">Cult community on RITUAL</p>
-      <button onclick="connectWallet()" id="join-button" class="glow-button px-12 py-5 text-2xl font-medium bg-emerald-600 hover:bg-emerald-500 rounded-3xl border border-emerald-400/30">
+      <button onclick="connectWallet()" id="join-button" class="glow-button px-12 py-5 text-2xl font-medium bg-emerald-600 hover:bg-emerald-500 rounded-3xl border border-emerald-400/30 mb-4">
         Join the Cult
+      </button>
+      <button onclick="openShop()" class="minecraft-font px-12 py-4 text-2xl font-medium bg-zinc-900 hover:bg-zinc-800 border-2 border-emerald-400 rounded-3xl text-emerald-400">
+        SHOP
       </button>
     </div>
   </section>
@@ -171,7 +174,7 @@
         </div>
       </div>
 
-      <div class="flex-1 flex flex-col">
+      <div class="flex-1 flex flex-col relative">
         <!-- Экран PLAY -->
         <div id="play-screen" class="flex-1 flex items-center justify-center">
           <button onclick="startGame()" class="px-20 py-10 text-6xl font-bold neon-green border-4 border-emerald-400 rounded-3xl hover:scale-105 transition">PLAY</button>
@@ -179,6 +182,33 @@
 
         <!-- Canvas игры -->
         <canvas id="game-canvas" class="flex-1 bg-black hidden"></canvas>
+
+        <!-- Экран результата (CONGRATZ BRUH) -->
+        <div id="game-result" class="hidden flex-1 flex flex-col items-center justify-center bg-black/70">
+          <h2 class="minecraft-font text-6xl neon-green mb-8">congratz bruh...</h2>
+          <div class="flex flex-col items-center gap-8">
+            <div class="flex items-center gap-6">
+              <img src="moneta.png" class="w-16 h-16">
+              <span id="result-coin" class="minecraft-font text-6xl font-bold text-emerald-400">0</span>
+            </div>
+            <div class="flex items-center gap-6">
+              <img src="pers.png" class="w-16 h-16">
+              <span id="result-character" class="minecraft-font text-6xl font-bold text-purple-400">0</span>
+            </div>
+          </div>
+          <button onclick="closeGame()" class="mt-12 px-12 py-5 text-3xl font-medium neon-green border-4 border-emerald-400 rounded-3xl hover:scale-105 transition">PLAY AGAIN</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHOP Modal -->
+  <div id="shop-modal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-[1200]">
+    <div class="bg-[#0a1f1a] border-4 border-emerald-400 rounded-3xl w-[70%] max-w-2xl h-[60vh] relative">
+      <button onclick="closeShop()" class="absolute top-4 right-6 text-4xl text-emerald-400 hover:text-red-400 z-10">×</button>
+      <div class="p-8 h-full flex flex-col items-center justify-center">
+        <h2 class="minecraft-font text-5xl neon-green mb-8">SHOP</h2>
+        <p class="minecraft-font text-3xl text-emerald-300">Coming soon...</p>
       </div>
     </div>
   </div>
@@ -229,13 +259,14 @@
       customCursor.style.display = 'block';
     });
 
-    // Wallet
+    // Wallet + persistence
     let isWalletConnected = false;
+    let totalCoins = 0;
+    let totalCharacters = 0;
 
     async function connectWallet() {
       const button = document.getElementById('join-button');
       if (!window.ethereum) { alert("MetaMask не установлен"); return false; }
-
       try {
         await window.ethereum.request({ method: 'eth_requestAccounts' });
         await window.ethereum.request({
@@ -248,7 +279,6 @@
             blockExplorerUrls: ['https://explorer.cratd2csmartchain.io/']
           }]
         });
-
         isWalletConnected = true;
         button.textContent = 'MINI GAME';
         button.style.backgroundColor = '#10b981';
@@ -272,26 +302,36 @@
       document.getElementById('profile-dropdown').style.display = 'none';
     }
 
+    function changeAvatar(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = ev => document.getElementById('profile-avatar').src = ev.target.result;
+        reader.readAsDataURL(file);
+      }
+    }
+
     // Мини-игра
     function openMiniGame() {
       if (!isWalletConnected) return;
       document.getElementById('game-modal').classList.remove('hidden');
-    }
-
-    function closeGame() {
-      document.getElementById('game-modal').classList.add('hidden');
+      document.getElementById('game-result').classList.add('hidden');
       document.getElementById('play-screen').classList.remove('hidden');
       document.getElementById('game-canvas').classList.add('hidden');
     }
 
+    function closeGame() {
+      document.getElementById('game-modal').classList.add('hidden');
+    }
+
     let gameScore = 0;
-    let gameTime = 30;
+    let characterCount = 0;
     let gameObjects = [];
     let gameInterval;
-    let characterCount = 0;
 
     function startGame() {
       document.getElementById('play-screen').classList.add('hidden');
+      document.getElementById('game-result').classList.add('hidden');
       const gameCanvas = document.getElementById('game-canvas');
       gameCanvas.classList.remove('hidden');
 
@@ -300,32 +340,32 @@
       gameCanvas.height = 500;
 
       gameScore = 0;
-      gameTime = 30;
       characterCount = 0;
       gameObjects = [];
       document.getElementById('game-score-coin').textContent = gameScore;
       document.getElementById('game-score-character').textContent = characterCount;
-      document.getElementById('game-timer').textContent = gameTime;
+      document.getElementById('game-timer').textContent = 30;
 
+      let timeLeft = 30;
       gameInterval = setInterval(() => {
-        gameTime--;
-        document.getElementById('game-timer').textContent = gameTime;
-        if (gameTime <= 0) {
+        timeLeft--;
+        document.getElementById('game-timer').textContent = timeLeft;
+        if (timeLeft <= 0) {
           clearInterval(gameInterval);
-          showGameResult();
+          endGame();
           return;
         }
       }, 1000);
 
-      // Генерация объектов (очень медленно)
+      // Генерация объектов — ОДИНАКОВАЯ медленная скорость
       setInterval(() => {
-        if (gameTime <= 0) return;
+        if (timeLeft <= 0) return;
         const rand = Math.random();
         gameObjects.push({
           x: Math.random() * gameCanvas.width,
           y: -80,
           size: rand < 0.65 ? 48 : rand < 0.92 ? 52 : 58,
-          speed: 0.8 + Math.random() * 0.8,
+          speed: 1.2,                                 // фиксированная медленная скорость
           rotation: 0,
           rotationSpeed: (Math.random() - 0.5) * 0.06,
           type: rand < 0.65 ? 'coin' : rand < 0.92 ? 'bomb' : 'character'
@@ -334,7 +374,6 @@
 
       function gameLoop() {
         ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
-
         for (let i = gameObjects.length - 1; i >= 0; i--) {
           const obj = gameObjects[i];
           obj.y += obj.speed;
@@ -358,7 +397,7 @@
       }
       gameLoop();
 
-      // Зажатие ЛКМ + движение = сбор
+      // Зажатие ЛКМ + движение = сбор (увеличенный hitbox)
       let isMouseDown = false;
       gameCanvas.addEventListener('mousedown', () => isMouseDown = true);
       gameCanvas.addEventListener('mouseup', () => isMouseDown = false);
@@ -370,11 +409,11 @@
 
         for (let i = gameObjects.length - 1; i >= 0; i--) {
           const obj = gameObjects[i];
-          if (Math.hypot(obj.x - clickX, obj.y - clickY) < obj.size) {
+          if (Math.hypot(obj.x - clickX, obj.y - clickY) < obj.size * 1.3) {  // увеличенный hitbox
             if (obj.type === 'coin') gameScore += 1;
-            else if (obj.type === 'bomb') gameScore = Math.max(0, gameScore - 10);
+            else if (obj.type === 'bomb') gameScore = Math.max(0, gameScore - 20);
             else {
-              gameScore += 50;
+              gameScore += 10;
               characterCount++;
             }
             document.getElementById('game-score-coin').textContent = gameScore;
@@ -385,10 +424,28 @@
       });
     }
 
-    function showGameResult() {
-      const message = `Игра окончена!\n\nМонет: ${gameScore}\nПерсонажей: ${characterCount}`;
-      alert(message);
-      closeGame();
+    function endGame() {
+      // Сохраняем в профиль
+      totalCoins += gameScore;
+      totalCharacters += characterCount;
+      document.getElementById('coin-balance').textContent = totalCoins;
+      document.getElementById('character-balance').textContent = totalCharacters;
+
+      // Показываем результат
+      document.getElementById('game-canvas').classList.add('hidden');
+      const resultScreen = document.getElementById('game-result');
+      resultScreen.classList.remove('hidden');
+      document.getElementById('result-coin').textContent = gameScore;
+      document.getElementById('result-character').textContent = characterCount;
+    }
+
+    // SHOP
+    function openShop() {
+      if (!isWalletConnected) return;
+      document.getElementById('shop-modal').classList.remove('hidden');
+    }
+    function closeShop() {
+      document.getElementById('shop-modal').classList.add('hidden');
     }
   </script>
 </body>
